@@ -1,0 +1,366 @@
+body {
+    background-color: #f1f3f4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Centered again since no omnibox */
+    height: 100vh;
+    margin: 0;
+    color: #202124;
+    box-sizing: border-box;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #202124;
+        color: #e8eaed;
+    }
+
+    .recycle-proposal {
+        background-color: #303134;
+        border: 1px solid #5f6368;
+    }
+}
+
+.container {
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+}
+
+/* Recycle Proposal */
+.recycle-proposal {
+    background: white;
+    border: 1px solid #dfe1e5;
+    border-radius: 12px;
+    /* More rounded */
+    padding: 24px;
+    /* More padding */
+    text-align: left;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    /* Deeper shadow */
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.recycle-proposal.hidden {
+    display: none;
+}
+
+.proposal-header {
+    font-size: 1em;
+    text-transform: uppercase;
+    color: #1a73e8;
+    /* Blue accent */
+    margin-bottom: 16px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+.proposal-content {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+}
+
+.tab-card {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s, box-shadow 0.2s;
+    min-width: 200px;
+}
+
+.tab-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-preview-container {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    background-color: #f1f3f4;
+    border-bottom: 1px solid #eee;
+}
+
+.card-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+}
+
+.card-pause-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.card-preview-container:hover .card-pause-overlay {
+    opacity: 1;
+}
+
+/* Modern Button Styles */
+/* Base Styles (MD) */
+.button-modern {
+    align-items: center;
+    background-image: linear-gradient(144deg, #AF40FF, #5B42F3 50%, #00DDEB);
+    border: 0;
+    border-radius: 8px;
+    box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
+    box-sizing: border-box;
+    color: #FFFFFF;
+    display: flex;
+    font-family: Phantomsans, sans-serif;
+    font-size: 20px;
+    height: 54px;
+    width: 200px;
+    justify-content: center;
+    line-height: 1em;
+    padding: 3px;
+    text-decoration: none;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.button-modern:active,
+.button-modern:hover {
+    outline: 0;
+}
+
+.button-modern span {
+    background-color: #00000029;
+    padding: 10px 24px;
+    border-radius: 6px;
+    width: 146px;
+    height: 28px;
+    transition: 300ms;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button-modern.grey:hover span,
+.button-modern.warm:hover span {
+    background-color: transparent;
+}
+
+@media (min-width: 768px) {
+    .button-modern {
+        font-size: 24px;
+    }
+}
+
+/* Size Variations */
+
+/* XS */
+.button-modern.xs {
+    height: 32px;
+    width: 120px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+.button-modern.xs span {
+    padding: 6px 14px;
+    width: 88px;
+    height: 17px;
+    border-radius: 4px;
+}
+
+/* SM */
+.button-modern.sm {
+    height: 43px;
+    width: 160px;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+.button-modern.sm span {
+    padding: 8px 19px;
+    width: 117px;
+    height: 22px;
+    border-radius: 5px;
+}
+
+/* LG */
+.button-modern.lg {
+    height: 65px;
+    width: 240px;
+    font-size: 24px;
+    border-radius: 10px;
+}
+
+.button-modern.lg span {
+    padding: 12px 29px;
+    width: 175px;
+    height: 34px;
+    border-radius: 7px;
+}
+
+/* XL */
+.button-modern.xl {
+    height: 76px;
+    width: 280px;
+    font-size: 28px;
+    border-radius: 11px;
+}
+
+.button-modern.xl span {
+    padding: 14px 34px;
+    width: 204px;
+    height: 39px;
+    border-radius: 8px;
+}
+
+
+/* Warm Gradient Modifier */
+.button-modern.warm {
+    background-image: linear-gradient(144deg, #ca0f0f, #be491a 50%, #e74432);
+    box-shadow: rgba(255, 75, 43, 0.2) 0 15px 30px -5px;
+}
+
+/* Greyscale Gradient Modifier */
+.button-modern.grey {
+    background-image: linear-gradient(144deg, #b3b6b9, #727477 50%, #565758);
+    box-shadow: rgba(179, 182, 185, 0.2) 0 15px 30px -5px;
+}
+
+/* Light Variant (Minimalist) */
+.button-modern.light span {
+    background-color: #ffffff;
+    color: #1c1c1c;
+}
+
+.button-modern.light:hover span {
+    background-color: transparent;
+    color: #ffffff;
+}
+
+/* Update Pause Overlay Button */
+.card-pause-btn {
+    /* Resetting old styles to inherit from btn-modern if needed, 
+       but we will apply the classes directly in JS */
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.card-info {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.card-favicon {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+}
+
+.card-title {
+    font-size: 0.95em;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #202124;
+}
+
+.card-url {
+    font-size: 0.85em;
+    color: #5f6368;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-time {
+    font-size: 0.8em;
+    color: #d93025;
+    margin-top: 4px;
+}
+
+.proposal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.status-message {
+    margin-top: 20px;
+    color: #5f6368;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Close Recycling Button */
+.close-recycling-btn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    background: transparent;
+    border: none;
+    color: #9aa0a6;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s, color 0.2s;
+    z-index: 1000;
+    outline: none;
+}
+
+.close-recycling-btn:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #5f6368;
+}
+
+@media (prefers-color-scheme: dark) {
+    .close-recycling-btn {
+        color: #9aa0a6;
+    }
+
+    .close-recycling-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: #e8eaed;
+    }
+}

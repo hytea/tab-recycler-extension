@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Recycler",
+  "version": "1.2",
+  "description": "Recycles old unused tabs instead of opening new ones.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "favicon",
+    "webNavigation",
+    "unlimitedStorage",
+    "contextMenus"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

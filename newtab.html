@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Tab</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Close button for disabling recycling -->
+        <button id="btn-close-recycling" class="close-recycling-btn"
+            title="Disable recycling for this tab (Alt+X)">×</button>
+
+        <!-- No Omnibox - Native Address Bar is used -->
+
+        <div id="recycle-proposal" class="recycle-proposal hidden">
+            <div class="proposal-header">
+                <span>♻️ Ready to Recycle</span>
+            </div>
+            <div id="proposal-content" class="proposal-content">
+                <!-- Injected via JS -->
+            </div>
+            <div class="proposal-actions">
+                <button id="btn-skip" class="button-modern xs light" role="button"><span class="text">Skip Batch
+                        (Esc)</span></button>
+            </div>
+        </div>
+
+        <div id="status" class="status-message"></div>
+    </div>
+    <script src="newtab.js"></script>
+</body>
+
+</html>
