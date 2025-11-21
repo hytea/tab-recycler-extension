@@ -1,13 +1,20 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const testToggle = document.getElementById('testing-mode');
     const cleanupToggle = document.getElementById('cleanup-mode');
-    const ignoreGroupedToggle = document.getElementById('ignore-grouped-tabs'); // Added this line based on context, as it was missing in the user's snippet but used later.
+    const ignoreGroupedToggle = document.getElementById('ignore-grouped-tabs');
+    const inactivitySelect = document.getElementById('inactivity-threshold');
+    const pauseDurationSelect = document.getElementById('pause-duration');
+    const customDurationContainer = document.getElementById('custom-duration-container');
+    const customDurationInput = document.getElementById('custom-duration');
+    const statusText = document.getElementById('status-text');
+    const whitelistContainer = document.getElementById('whitelist-container');
 
     // Load current state
-    const data = await chrome.storage.local.get(['testingMode', 'recyclingMode', 'ignoreGroupedTabs', 'pauseDuration', 'blocklist']);
+    const data = await chrome.storage.local.get(['testingMode', 'recyclingMode', 'ignoreGroupedTabs', 'pauseDuration', 'blocklist', 'minInactiveTime']);
     testToggle.checked = !!data.testingMode;
     cleanupToggle.checked = data.recyclingMode === 'cleanup';
     ignoreGroupedToggle.checked = !!data.ignoreGroupedTabs;
+    inactivitySelect.value = data.minInactiveTime || 3600000;
 
     const pauseDuration = data.pauseDuration || 4;
     // Check if it's a standard value or custom
@@ -40,6 +47,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateStatus();
     });
 
+    inactivitySelect.addEventListener('change', async () => {
+        await chrome.storage.local.set({ minInactiveTime: parseInt(inactivitySelect.value) });
+        updateStatus();
+    });
+
     pauseDurationSelect.addEventListener('change', async () => {
         if (pauseDurationSelect.value === 'custom') {
             customDurationContainer.style.display = 'flex';
@@ -69,22 +81,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Get actual pause duration value
         let pauseDuration;
         if (pauseDurationSelect.value === 'custom') {
-            pauseDuration = customDurationInput.value;
+            pauseDuration = parseInt(customDurationInput.value, 10);
         } else {
-            pauseDuration = pauseDurationSelect.value;
+            pauseDuration = parseInt(pauseDurationSelect.value, 10);
         }
 
-        const timeThreshold = isTesting ? "10 seconds" : "1 hour";
-        const countBehavior = isCleanup
-            ? "up to 3 tabs will be proposed for recycling"
-            : "the single best candidate will be recycled";
+        const minInactiveTime = parseInt(inactivitySelect.value);
+        let timeThresholdDisplay = "";
+        if (minInactiveTime < 60000) {
+            timeThresholdDisplay = `${minInactiveTime / 1000} seconds`;
+        } else if (minInactiveTime < 3600000) {
+            const m = minInactiveTime / 60000;
+            timeThresholdDisplay = `${m} minute${m !== 1 ? 's' : ''}`;
+        } else {
+            const h = minInactiveTime / 3600000;
+            timeThresholdDisplay = `${h} hour${h !== 1 ? 's' : ''}`;
+        }
+
+        const timeThreshold = isTesting ? "10 seconds (Testing Mode)" : timeThresholdDisplay;
+        const countText = isCleanup ? "up to 3 tabs" : "1 tab";
+        const groupText = isIgnoreGrouped ? "not candidates" : "candidates";
 
         statusText.innerHTML = `
             <strong>Current Behavior:</strong><br>
-            Tabs inactive for over ${timeThreshold} are candidates. 
-            When opening a new tab, ${countBehavior}.<br>
-            ${isIgnoreGrouped ? 'Tabs in groups are ignored.<br>' : ''}
-            <strong>Pause Duration:</strong> ${pauseDuration} hour${pauseDuration > 1 ? 's' : ''}
+            Tabs inactive for over ${timeThreshold} are candidates for recycling. When opening a new tab, ${countText} will be proposed for recycling. Tabs in groups are ${groupText} for recycling. When you pause a tab it will only be proposed as a candidate again after ${pauseDuration} hour${pauseDuration !== 1 ? 's' : ''}.
         `;
     }
 

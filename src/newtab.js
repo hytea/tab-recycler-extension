@@ -22,7 +22,8 @@ async function checkRecyclingCandidates() {
         const ignoreGroupedTabs = storageData.ignoreGroupedTabs || false;
 
         // Configuration based on mode
-        const threshold = isTesting ? 10 * 1000 : 60 * 60 * 1000;
+        const minInactiveTime = storageData.minInactiveTime || 3600000;
+        const threshold = isTesting ? 10 * 1000 : minInactiveTime;
 
         // Filter and sort tabs
         candidates = tabs.filter(tab => {
