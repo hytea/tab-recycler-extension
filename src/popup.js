@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const testToggle = document.getElementById('testing-mode');
     const cleanupToggle = document.getElementById('cleanup-mode');
+    const ignoreGroupedToggle = document.getElementById('ignore-grouped-tabs');
     const pauseDurationSelect = document.getElementById('pause-duration');
     const customDurationContainer = document.getElementById('custom-duration-container');
     const customDurationInput = document.getElementById('custom-duration');
@@ -8,9 +9,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statusText = document.getElementById('status-text');
 
     // Load current state
-    const data = await chrome.storage.local.get(['testingMode', 'recyclingMode', 'pauseDuration', 'blocklist']);
+    const data = await chrome.storage.local.get(['testingMode', 'recyclingMode', 'ignoreGroupedTabs', 'pauseDuration', 'blocklist']);
     testToggle.checked = !!data.testingMode;
     cleanupToggle.checked = data.recyclingMode === 'cleanup';
+    ignoreGroupedToggle.checked = !!data.ignoreGroupedTabs;
 
     const pauseDuration = data.pauseDuration || 4;
     // Check if it's a standard value or custom
@@ -38,6 +40,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateStatus();
     });
 
+    ignoreGroupedToggle.addEventListener('change', async () => {
+        await chrome.storage.local.set({ ignoreGroupedTabs: ignoreGroupedToggle.checked });
+        updateStatus();
+    });
+
     pauseDurationSelect.addEventListener('change', async () => {
         if (pauseDurationSelect.value === 'custom') {
             customDurationContainer.style.display = 'flex';
@@ -62,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateStatus() {
         const isTesting = testToggle.checked;
         const isCleanup = cleanupToggle.checked;
+        const isIgnoreGrouped = ignoreGroupedToggle.checked;
 
         // Get actual pause duration value
         let pauseDuration;
@@ -80,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <strong>Current Behavior:</strong><br>
             Tabs inactive for over ${timeThreshold} are candidates. 
             When opening a new tab, ${countBehavior}.<br>
+            ${isIgnoreGrouped ? 'Tabs in groups are ignored.<br>' : ''}
             <strong>Pause Duration:</strong> ${pauseDuration} hour${pauseDuration > 1 ? 's' : ''}
         `;
     }

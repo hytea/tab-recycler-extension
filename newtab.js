@@ -19,7 +19,6 @@ async function checkRecyclingCandidates() {
         const blocklist = storageData.blocklist || [];
         const pausedTabs = storageData.pausedTabs || {};
         const isTesting = storageData.testingMode || false;
-        const ignoreGroupedTabs = storageData.ignoreGroupedTabs || false;
 
         // Configuration based on mode
         const threshold = isTesting ? 10 * 1000 : 60 * 60 * 1000;
@@ -33,9 +32,6 @@ async function checkRecyclingCandidates() {
 
             // Check if tab is paused
             if (pausedTabs[tab.id] && pausedTabs[tab.id] > now) return false;
-
-            // Check if tab is in a group and we should ignore it
-            if (ignoreGroupedTabs && tab.groupId !== -1) return false;
 
             // TEST REQUIREMENT: Must have a preview (Only in testing mode)
             if (isTesting && !storageData[`preview_${tab.id}`]) return false;
@@ -134,7 +130,7 @@ function showProposal(tabs) {
             <div class="card-preview-container">
                 <img class="card-preview" src="" alt="Loading preview...">
                 <div class="card-pause-overlay">
-                    <button class="card-pause-btn button-modern warm sm warm" role="button"><span class="text">Pause</span></button>
+                    <button class="card-pause-btn button-modern warm sm" role="button"><span class="text">Pause</span></button>
                 </div>
             </div>
             <div class="card-info">
