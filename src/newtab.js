@@ -5,30 +5,6 @@ let currentCandidateIndex = 0;
 
 async function init() {
     await checkRecyclingCandidates();
-    await updateStats();
-}
-
-async function updateStats() {
-    try {
-        const statsData = await chrome.storage.local.get(['stats_totalTabsRecycled', 'stats_estimatedMemorySaved']);
-        const totalTabs = statsData.stats_totalTabsRecycled || 0;
-        const totalMemory = statsData.stats_estimatedMemorySaved || 0;
-
-        if (totalTabs > 0) {
-            document.getElementById('stat-tabs').textContent = totalTabs;
-
-            // Format memory
-            let memoryText = totalMemory + 'MB';
-            if (totalMemory >= 1000) {
-                memoryText = (totalMemory / 1000).toFixed(1) + 'GB';
-            }
-            document.getElementById('stat-memory').textContent = memoryText;
-
-            document.getElementById('stats-dashboard').classList.remove('hidden');
-        }
-    } catch (e) {
-        console.error("Error updating stats:", e);
-    }
 }
 
 async function checkRecyclingCandidates() {
@@ -44,13 +20,12 @@ async function checkRecyclingCandidates() {
         const pausedTabs = storageData.pausedTabs || {};
         const isTesting = storageData.testingMode || false;
         const ignoreGroupedTabs = storageData.ignoreGroupedTabs || false;
-        const prioritizeMemory = storageData.prioritizeMemory || false;
 
         // Configuration based on mode
         const threshold = isTesting ? 10 * 1000 : 60 * 60 * 1000;
 
-        // Filter tabs first
-        let filteredCandidates = tabs.filter(tab => {
+        // Filter and sort tabs
+        candidates = tabs.filter(tab => {
             if (tab.windowId !== currentTab.windowId) return false; // Explicit window check
             if (tab.active || tab.id === currentTab.id) return false;
             if (!tab.lastAccessed) return false;
@@ -72,52 +47,7 @@ async function checkRecyclingCandidates() {
             } catch (e) { return false; }
 
             return true;
-        });
-
-        // Fetch memory usage if prioritization is enabled
-        if (prioritizeMemory && chrome.processes) {
-            const processMap = new Map();
-
-            // Get process IDs for all candidates
-            await Promise.all(filteredCandidates.map(async (tab) => {
-                try {
-                    const processId = await chrome.processes.getProcessIdForTab(tab.id);
-                    processMap.set(tab.id, processId);
-                } catch (e) {
-                    // Ignore errors
-                }
-            }));
-
-            // Get process info
-            const processIds = Array.from(new Set(processMap.values()));
-            if (processIds.length > 0) {
-                const processInfos = await chrome.processes.getProcessInfo(processIds, true);
-
-                // Attach memory info to tabs
-                filteredCandidates.forEach(tab => {
-                    const pid = processMap.get(tab.id);
-                    if (pid && processInfos[pid]) {
-                        // privateMemory is in bytes
-                        tab.memoryUsage = processInfos[pid].privateMemory;
-                    } else {
-                        tab.memoryUsage = 0;
-                    }
-                });
-
-                // Sort by memory usage (descending)
-                filteredCandidates.sort((a, b) => b.memoryUsage - a.memoryUsage);
-            } else {
-                // Fallback to LRU
-                filteredCandidates.sort((a, b) => b.index - a.index); // Actually LRU should be by lastAccessed? 
-                // The original code sorted by index (rightmost). Let's keep that fallback.
-                filteredCandidates.sort((a, b) => b.index - a.index);
-            }
-        } else {
-            // Standard sort (Rightmost first)
-            filteredCandidates.sort((a, b) => b.index - a.index);
-        }
-
-        candidates = filteredCandidates;
+        }).sort((a, b) => b.index - a.index);
 
         if (candidates.length > 0) {
             showCandidate(0);
@@ -195,12 +125,6 @@ function showProposal(tabs) {
             timeText = `Last used ${hours} hour${hours > 1 ? 's' : ''} ago`;
         } else {
             timeText = `Last used ${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-        }
-
-        // Add memory info if available
-        if (tab.memoryUsage) {
-            const mb = Math.round(tab.memoryUsage / (1024 * 1024));
-            timeText += ` • ${mb} MB`;
         }
 
         // Favicon

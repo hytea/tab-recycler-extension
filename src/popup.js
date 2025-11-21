@@ -1,14 +1,13 @@
 document.addEventListener('DOMContentLoaded', async () => {
     const testToggle = document.getElementById('testing-mode');
     const cleanupToggle = document.getElementById('cleanup-mode');
-    const prioritizeMemoryToggle = document.getElementById('prioritize-memory');
+    const ignoreGroupedToggle = document.getElementById('ignore-grouped-tabs'); // Added this line based on context, as it was missing in the user's snippet but used later.
 
     // Load current state
-    const data = await chrome.storage.local.get(['testingMode', 'recyclingMode', 'ignoreGroupedTabs', 'prioritizeMemory', 'pauseDuration', 'blocklist']);
+    const data = await chrome.storage.local.get(['testingMode', 'recyclingMode', 'ignoreGroupedTabs', 'pauseDuration', 'blocklist']);
     testToggle.checked = !!data.testingMode;
     cleanupToggle.checked = data.recyclingMode === 'cleanup';
     ignoreGroupedToggle.checked = !!data.ignoreGroupedTabs;
-    prioritizeMemoryToggle.checked = !!data.prioritizeMemory;
 
     const pauseDuration = data.pauseDuration || 4;
     // Check if it's a standard value or custom
@@ -41,11 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateStatus();
     });
 
-    prioritizeMemoryToggle.addEventListener('change', async () => {
-        await chrome.storage.local.set({ prioritizeMemory: prioritizeMemoryToggle.checked });
-        updateStatus();
-    });
-
     pauseDurationSelect.addEventListener('change', async () => {
         if (pauseDurationSelect.value === 'custom') {
             customDurationContainer.style.display = 'flex';
@@ -71,7 +65,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const isTesting = testToggle.checked;
         const isCleanup = cleanupToggle.checked;
         const isIgnoreGrouped = ignoreGroupedToggle.checked;
-        const isPrioritizeMemory = prioritizeMemoryToggle.checked;
 
         // Get actual pause duration value
         let pauseDuration;
@@ -91,7 +84,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             Tabs inactive for over ${timeThreshold} are candidates. 
             When opening a new tab, ${countBehavior}.<br>
             ${isIgnoreGrouped ? 'Tabs in groups are ignored.<br>' : ''}
-            ${isPrioritizeMemory ? 'High memory tabs are prioritized.<br>' : ''}
             <strong>Pause Duration:</strong> ${pauseDuration} hour${pauseDuration > 1 ? 's' : ''}
         `;
     }
