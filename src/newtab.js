@@ -139,7 +139,7 @@ function showProposal(tabs) {
             </div>
             <div class="card-info">
                 <div class="card-header">
-                    <img class="card-favicon" src="${faviconUrl}" onerror="this.src='icons/default.png'">
+                    <img class="card-favicon" src="${faviconUrl}" alt="Favicon">
                     <div class="card-title" title="${tab.title}">${tab.title}</div>
                 </div>
                 <div class="card-url" title="${tab.url}">${tab.url}</div>
@@ -166,6 +166,7 @@ function showProposal(tabs) {
         cardInfo.onclick = async (e) => {
             e.stopPropagation();
             try {
+                await addToHistory(tab);
                 await chrome.tabs.update(tab.id, { active: true });
                 const current = await chrome.tabs.getCurrent();
                 await chrome.tabs.remove(current.id);
@@ -237,5 +238,93 @@ async function pauseTabs(tabs) {
         skipCandidate();
     }
 }
+
+// History Management
+async function addToHistory(tab) {
+    try {
+        const data = await chrome.storage.local.get('recyclingHistory');
+        let history = data.recyclingHistory || [];
+
+        const newItem = {
+            title: tab.title,
+            url: tab.url,
+            favIconUrl: tab.favIconUrl,
+            timestamp: Date.now()
+        };
+
+        // Add to beginning
+        history.unshift(newItem);
+
+        // Keep last 10
+        if (history.length > 10) {
+            history = history.slice(0, 10);
+        }
+
+        await chrome.storage.local.set({ recyclingHistory: history });
+    } catch (e) {
+        console.error("Error saving history:", e);
+    }
+}
+
+async function renderHistory() {
+    const data = await chrome.storage.local.get('recyclingHistory');
+    const history = data.recyclingHistory || [];
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+
+    if (history.length === 0) {
+        list.innerHTML = '<div class="empty-history">No history yet.</div>';
+        return;
+    }
+
+    history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+
+        // Time formatting
+        const date = new Date(item.timestamp);
+        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        div.innerHTML = `
+            <img class="history-favicon" src="${item.favIconUrl || 'icons/default.png'}" alt="Favicon">
+            <div class="history-details">
+                <div class="history-title" title="${item.title}">${item.title}</div>
+                <div class="history-url" title="${item.url}">${item.url}</div>
+            </div>
+            <div class="history-time">${timeStr}</div>
+        `;
+
+        div.onclick = () => {
+            chrome.tabs.create({ url: item.url });
+        };
+
+        list.appendChild(div);
+    });
+}
+
+// History UI Binding
+const modal = document.getElementById('history-modal');
+const btnHistory = document.getElementById('btn-history');
+const closeHistory = document.getElementById('close-history');
+
+if (btnHistory) {
+    btnHistory.onclick = () => {
+        renderHistory();
+        modal.classList.remove('hidden');
+    };
+}
+
+if (closeHistory) {
+    closeHistory.onclick = () => {
+        modal.classList.add('hidden');
+    };
+}
+
+// Close modal when clicking outside
+window.onclick = (event) => {
+    if (event.target == modal) {
+        modal.classList.add('hidden');
+    }
+};
 
 init();

@@ -37,8 +37,27 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 
         console.log(`Navigation detected on ${newTabId}. Closing candidates ${candidateIds.join(', ')}.`);
 
-        candidateIds.forEach(id => {
-            chrome.tabs.remove(id).catch(err => console.log(`Could not close tab ${id} (maybe already closed):`, err));
+        // Fetch all tabs first to avoid race conditions with storage
+        const tabPromises = candidateIds.map(id => new Promise(resolve => {
+            chrome.tabs.get(id, tab => {
+                if (chrome.runtime.lastError || !tab) {
+                    resolve(null);
+                } else {
+                    resolve(tab);
+                }
+            });
+        }));
+
+        Promise.all(tabPromises).then(async (tabs) => {
+            const validTabs = tabs.filter(t => t !== null);
+            if (validTabs.length > 0) {
+                await addBatchToHistory(validTabs);
+            }
+
+        // Then remove all
+            candidateIds.forEach(id => {
+                chrome.tabs.remove(id).catch(err => console.log(`Could not close tab ${id} (maybe already closed):`, err));
+            });
         });
         recyclingMap.delete(newTabId);
     }
@@ -252,3 +271,30 @@ async function cleanupExpiredPauses() {
 // Run pause cleanup periodically (every hour)
 setInterval(cleanupExpiredPauses, 60 * 60 * 1000);
 
+// History Management (Duplicated from newtab.js for background execution)
+async function addBatchToHistory(tabs) {
+    try {
+        const data = await chrome.storage.local.get('recyclingHistory');
+        let history = data.recyclingHistory || [];
+
+        // Add all new items
+        tabs.forEach(tab => {
+            history.unshift({
+                title: tab.title,
+                url: tab.url,
+                favIconUrl: tab.favIconUrl,
+                timestamp: Date.now()
+            });
+        });
+
+        // Keep last 10
+        if (history.length > 10) {
+            history = history.slice(0, 10);
+        }
+
+        await chrome.storage.local.set({ recyclingHistory: history });
+        console.log(`Saved ${tabs.length} tabs to history.`);
+    } catch (e) {
+        console.error("Error saving history:", e);
+    }
+}

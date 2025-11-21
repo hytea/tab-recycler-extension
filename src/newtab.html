@@ -14,6 +14,10 @@
         <button id="btn-close-recycling" class="close-recycling-btn"
             title="Disable recycling for this tab (Alt+X)">×</button>
 
+        <button id="btn-history" class="history-btn" title="View Recycling History">
+            <img src="icons/history.svg" alt="History">
+        </button>
+
         <!-- No Omnibox - Native Address Bar is used -->
 
         <div id="recycle-proposal" class="recycle-proposal hidden">
@@ -31,6 +35,19 @@
 
         <div id="status" class="status-message"></div>
     </div>
+<!-- History Modal -->
+<div id="history-modal" class="modal hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Recycling History</h2>
+            <span id="close-history" class="close-modal">&times;</span>
+        </div>
+        <div id="history-list" class="history-list">
+            <!-- History items injected here -->
+            <div class="empty-history">No history yet.</div>
+        </div>
+    </div>
+</div>
     <script src="newtab.js"></script>
 </body>
 
