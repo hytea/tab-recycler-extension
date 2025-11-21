@@ -294,6 +294,20 @@ async function addBatchToHistory(tabs) {
 
         await chrome.storage.local.set({ recyclingHistory: history });
         console.log(`Saved ${tabs.length} tabs to history.`);
+
+        // Update cumulative stats
+        const statsData = await chrome.storage.local.get(['stats_totalTabsRecycled', 'stats_estimatedMemorySaved']);
+        let totalTabs = statsData.stats_totalTabsRecycled || 0;
+        let totalMemory = statsData.stats_estimatedMemorySaved || 0;
+
+        totalTabs += tabs.length;
+        totalMemory += (tabs.length * 100); // 100MB per tab
+
+        await chrome.storage.local.set({
+            stats_totalTabsRecycled: totalTabs,
+            stats_estimatedMemorySaved: totalMemory
+        });
+        console.log(`Updated stats: ${totalTabs} tabs, ${totalMemory}MB saved.`);
     } catch (e) {
         console.error("Error saving history:", e);
     }

@@ -9,7 +9,8 @@
     "favicon",
     "webNavigation",
     "unlimitedStorage",
-    "contextMenus"
+    "contextMenus",
+    "processes"
   ],
   "chrome_url_overrides": {
     "newtab": "newtab.html"
