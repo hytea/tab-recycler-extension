@@ -357,4 +357,76 @@ window.onclick = (event) => {
     }
 };
 
+// News Feed Functionality
+async function loadNewsFeed() {
+    const newsContainer = document.getElementById('news-items');
+
+    try {
+        // Using the free tier of Hacker News API as a reliable, CORS-friendly source
+        const response = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
+        const storyIds = await response.json();
+
+        // Get the top 5 stories
+        const topStoryIds = storyIds.slice(0, 5);
+        const stories = await Promise.all(
+            topStoryIds.map(id =>
+                fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+                    .then(r => r.json())
+            )
+        );
+
+        // Clear loading state
+        newsContainer.innerHTML = '';
+
+        // Render news items
+        stories.forEach(story => {
+            if (!story) return;
+
+            const newsItem = document.createElement('a');
+            newsItem.className = 'news-item';
+            newsItem.href = story.url || `https://news.ycombinator.com/item?id=${story.id}`;
+            newsItem.target = '_blank';
+            newsItem.rel = 'noopener noreferrer';
+
+            // Calculate time ago
+            const timeAgo = getTimeAgo(story.time * 1000);
+
+            newsItem.innerHTML = `
+                <div class="news-item-source">HN</div>
+                <div class="news-item-content">
+                    <h3 class="news-item-title">${escapeHtml(story.title)}</h3>
+                    <div class="news-item-time">${timeAgo} • ${story.score || 0} points</div>
+                </div>
+            `;
+
+            newsContainer.appendChild(newsItem);
+        });
+    } catch (error) {
+        console.error('Failed to load news:', error);
+        newsContainer.innerHTML = '<div style="text-align: center; color: #9aa0a6; padding: 20px; font-size: 12px;">Unable to load news</div>';
+    }
+}
+
+function getTimeAgo(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) return `${days}d ago`;
+    if (hours > 0) return `${hours}h ago`;
+    if (minutes > 0) return `${minutes}m ago`;
+    return 'just now';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Load news feed on page load
+loadNewsFeed();
+
 init();
