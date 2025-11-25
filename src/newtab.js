@@ -2,6 +2,7 @@
 
 let candidates = [];
 let currentCandidateIndex = 0;
+let currentProposalIds = [];
 
 async function init() {
     await checkRecyclingCandidates();
@@ -87,12 +88,13 @@ async function showCandidate(index) {
     if (tabsToRecycle.length === 0) return;
 
     currentBatchSize = tabsToRecycle.length;
+    currentProposalIds = tabsToRecycle.map(t => t.id);
     showProposal(tabsToRecycle);
 
     // Register with background script
     chrome.runtime.sendMessage({
         type: 'REGISTER_CANDIDATE',
-        candidateIds: tabsToRecycle.map(t => t.id)
+        candidateIds: currentProposalIds
     });
 }
 
@@ -181,6 +183,35 @@ function showProposal(tabs) {
         pauseBtn.onclick = async (e) => {
             e.stopPropagation();
             await pauseTabs([tab]);
+
+            // Remove the card visually
+            card.remove();
+
+            // Update local tracking
+            currentProposalIds = currentProposalIds.filter(id => id !== tab.id);
+
+            // Check if any cards remain
+            const remaining = proposalContent.querySelectorAll('.tab-card').length;
+            if (remaining === 0) {
+                // No candidates left in this batch
+                chrome.runtime.sendMessage({ type: 'CANCEL_RECYCLE' });
+                skipCandidate();
+            } else {
+                // Update background script with remaining candidates
+                chrome.runtime.sendMessage({
+                    type: 'REGISTER_CANDIDATE',
+                    candidateIds: currentProposalIds
+                });
+
+                // Update header count
+                if (headerSpan) {
+                    if (remaining > 1) {
+                        headerSpan.textContent = `♻️ Ready to Recycle (${remaining} Tabs)`;
+                    } else {
+                        headerSpan.textContent = `♻️ Ready to Recycle`;
+                    }
+                }
+            }
         };
 
         proposalContent.appendChild(card);
@@ -233,10 +264,8 @@ async function pauseTabs(tabs) {
         });
 
         await chrome.storage.local.set({ pausedTabs });
-        skipCandidate();
     } catch (e) {
         console.error(e);
-        skipCandidate();
     }
 }
 

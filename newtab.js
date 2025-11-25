@@ -159,15 +159,12 @@ function showProposal(tabs) {
 
         // Click card-info to navigate
         const cardInfo = card.querySelector('.card-info');
-        cardInfo.onclick = async (e) => {
+        cardInfo.onclick = (e) => {
             e.stopPropagation();
-            try {
-                await chrome.tabs.update(tab.id, { active: true });
-                const current = await chrome.tabs.getCurrent();
-                await chrome.tabs.remove(current.id);
-            } catch (err) {
-                console.error("Could not navigate:", err);
-            }
+            chrome.runtime.sendMessage({
+                type: 'PERFORM_RECYCLE',
+                tabId: tab.id
+            });
         };
 
         // Click pause button to pause this tab

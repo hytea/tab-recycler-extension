@@ -18,6 +18,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             console.log(`Cancelled recycling for NewTab ${newTabId}`);
             recyclingMap.delete(newTabId);
         }
+    } else if (message.type === 'PERFORM_RECYCLE') {
+        const targetTabId = message.tabId;
+        const newTabId = sender.tab.id;
+
+        console.log(`Performing recycling: NewTab ${newTabId} -> Target ${targetTabId}`);
+
+        chrome.tabs.get(targetTabId, async (tab) => {
+            if (chrome.runtime.lastError || !tab) {
+                console.error("Target tab not found:", chrome.runtime.lastError);
+                return;
+            }
+
+            // 1. Add to history FIRST
+            await addBatchToHistory([tab]);
+
+            // 2. Activate target tab
+            await chrome.tabs.update(targetTabId, { active: true });
+
+            // 3. Focus window if needed
+            if (tab.windowId !== chrome.windows.WINDOW_ID_CURRENT) {
+                await chrome.windows.update(tab.windowId, { focused: true });
+            }
+
+            // 4. Close the new tab page (sender)
+            chrome.tabs.remove(newTabId).catch(() => { });
+
+            // Cleanup map
+            recyclingMap.delete(newTabId);
+        });
     }
 });
 
