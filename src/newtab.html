@@ -10,15 +10,35 @@
 
 <body>
     <div class="container">
-        <!-- Close button for disabling recycling -->
-        <button id="btn-close-recycling" class="close-recycling-btn"
-            title="Disable recycling for this tab (Alt+X)">×</button>
+        <div class="header">
+            <div class="logo-area">
+                <img src="icons/icon-48.png" alt="Logo">
+                <h1>Tab Recycler</h1>
+            </div>
+            <div class="header-controls">
+                <button id="btn-history" class="icon-btn" title="View History">
+                    <span class="icon">🕒</span>
+                </button>
+                <button id="btn-close-recycling" class="icon-btn" title="Disable Recycling for this Tab">
+                    <span class="icon">✕</span>
+                </button>
+            </div>
+        </div>
 
-        <button id="btn-history" class="history-btn" title="View Recycling History">
-            <img src="icons/history.svg" alt="History">
-        </button>
+        <div id="threshold-warning" class="flash-alert hidden">
+            <div class="flash-content">
+                <span class="flash-icon">ℹ️</span>
+                <div class="flash-message">
+                    <strong>Heads up!</strong> You are using an unusually short inactivity threshold. This is great for
+                    testing, but for day-to-day usage, we recommend a higher interval (we've found 2 hours is the sweet
+                    spot). Unless you prefer aggressive cleanup, feel free to dismiss this. <a href="#" id="link-settings">Click
+                        here</a> to update your settings.
+                </div>
+            </div>
+            <button id="btn-dismiss-warning" class="flash-close" title="Dismiss">✕</button>
+        </div>
 
-        <!-- No Omnibox - Native Address Bar is used -->
+        <div id="status" class="status">Checking for recyclable tabs...</div>
 
         <div id="recycle-proposal" class="recycle-proposal hidden">
             <div class="proposal-header">
@@ -32,8 +52,6 @@
                         (Esc)</span></button>
             </div>
         </div>
-
-        <div id="status" class="status-message"></div>
     </div>
 <!-- History Modal -->
 <div id="history-modal" class="modal hidden">

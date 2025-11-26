@@ -1,4 +1,5 @@
-// Thresholds are now dynamic based on testingMode
+// Thresholds are now dynamic based on user settings
+
 
 let candidates = [];
 let currentCandidateIndex = 0;
@@ -6,7 +7,35 @@ let currentProposalIds = [];
 
 async function init() {
     await checkRecyclingCandidates();
+    await checkWarning();
 }
+
+async function checkWarning() {
+    const storageData = await chrome.storage.local.get(['minInactiveTime', 'dismissed_warning_threshold']);
+    const minInactiveTime = storageData.minInactiveTime || 3600000;
+    const dismissedThreshold = storageData.dismissed_warning_threshold || 0;
+
+    // Warning threshold: 5 minutes (300000 ms) or less
+    if (minInactiveTime <= 300000) {
+        if (dismissedThreshold !== minInactiveTime) {
+            document.getElementById('threshold-warning').classList.remove('hidden');
+        }
+    }
+}
+
+// Warning UI Binding
+document.getElementById('btn-dismiss-warning').onclick = async () => {
+    const storageData = await chrome.storage.local.get('minInactiveTime');
+    const minInactiveTime = storageData.minInactiveTime || 3600000;
+    await chrome.storage.local.set({ dismissed_warning_threshold: minInactiveTime });
+    document.getElementById('threshold-warning').classList.add('hidden');
+};
+
+document.getElementById('link-settings').onclick = (e) => {
+    e.preventDefault();
+    alert("Please open the extension popup from the toolbar to change settings.");
+};
+
 
 async function checkRecyclingCandidates() {
     try {
@@ -19,12 +48,12 @@ async function checkRecyclingCandidates() {
         const storageData = await chrome.storage.local.get(null);
         const blocklist = storageData.blocklist || [];
         const pausedTabs = storageData.pausedTabs || {};
-        const isTesting = storageData.testingMode || false;
+
         const ignoreGroupedTabs = storageData.ignoreGroupedTabs || false;
 
         // Configuration based on mode
         const minInactiveTime = storageData.minInactiveTime || 3600000;
-        const threshold = isTesting ? 10 * 1000 : minInactiveTime;
+        const threshold = minInactiveTime;
 
         // Filter and sort tabs
         candidates = tabs.filter(tab => {
@@ -39,8 +68,7 @@ async function checkRecyclingCandidates() {
             // Check if tab is in a group and we should ignore it
             if (ignoreGroupedTabs && tab.groupId !== -1) return false;
 
-            // TEST REQUIREMENT: Must have a preview (Only in testing mode)
-            if (isTesting && !storageData[`preview_${tab.id}`]) return false;
+
 
             // Check blocklist (domain)
             try {
@@ -53,7 +81,12 @@ async function checkRecyclingCandidates() {
 
         if (candidates.length > 0) {
             showCandidate(0);
+        } else {
+            const status = document.getElementById('status');
+            status.textContent = "No tabs to recycle right now.";
+            status.classList.remove('hidden');
         }
+
     } catch (error) {
         console.error("Error checking candidates:", error);
     }
@@ -69,9 +102,12 @@ async function showCandidate(index) {
     if (index >= candidates.length) {
         // No more candidates
         document.getElementById('recycle-proposal').classList.add('hidden');
-        document.getElementById('status').textContent = "No more tabs to recycle.";
+        const status = document.getElementById('status');
+        status.textContent = "No more tabs to recycle.";
+        status.classList.remove('hidden');
         chrome.runtime.sendMessage({ type: 'CANCEL_RECYCLE' });
         return;
+
     }
 
     currentCandidateIndex = index;
@@ -90,6 +126,8 @@ async function showCandidate(index) {
     currentBatchSize = tabsToRecycle.length;
     currentProposalIds = tabsToRecycle.map(t => t.id);
     showProposal(tabsToRecycle);
+    document.getElementById('status').classList.add('hidden');
+
 
     // Register with background script
     chrome.runtime.sendMessage({

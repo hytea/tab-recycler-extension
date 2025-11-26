@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const testToggle = document.getElementById('testing-mode');
+
     const cleanupToggle = document.getElementById('cleanup-mode');
     const ignoreGroupedToggle = document.getElementById('ignore-grouped-tabs');
     const inactivitySelect = document.getElementById('inactivity-threshold');
@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const whitelistContainer = document.getElementById('whitelist-container');
 
     // Load current state
-    const data = await chrome.storage.local.get(['testingMode', 'recyclingMode', 'ignoreGroupedTabs', 'pauseDuration', 'blocklist', 'minInactiveTime']);
-    testToggle.checked = !!data.testingMode;
+    const data = await chrome.storage.local.get(['recyclingMode', 'ignoreGroupedTabs', 'pauseDuration', 'blocklist', 'minInactiveTime']);
+
     cleanupToggle.checked = data.recyclingMode === 'cleanup';
     ignoreGroupedToggle.checked = !!data.ignoreGroupedTabs;
     inactivitySelect.value = data.minInactiveTime || 3600000;
@@ -31,10 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateWhitelist(data.blocklist || []);
 
     // Listen for changes
-    testToggle.addEventListener('change', async () => {
-        await chrome.storage.local.set({ testingMode: testToggle.checked });
-        updateStatus();
-    });
+
 
     cleanupToggle.addEventListener('change', async () => {
         const mode = cleanupToggle.checked ? 'cleanup' : 'standard';
@@ -74,7 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     function updateStatus() {
-        const isTesting = testToggle.checked;
+
         const isCleanup = cleanupToggle.checked;
         const isIgnoreGrouped = ignoreGroupedToggle.checked;
 
@@ -98,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             timeThresholdDisplay = `${h} hour${h !== 1 ? 's' : ''}`;
         }
 
-        const timeThreshold = isTesting ? "10 seconds (Testing Mode)" : timeThresholdDisplay;
+        const timeThreshold = timeThresholdDisplay;
         const countText = isCleanup ? "up to 3 tabs" : "1 tab";
         const groupText = isIgnoreGrouped ? "not candidates" : "candidates";
 
