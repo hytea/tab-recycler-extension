@@ -57,6 +57,12 @@ chrome.webNavigation.onCommitted.addListener((details) => {
 
     const newTabId = details.tabId;
 
+    // Ignore history navigation (back/forward)
+    if (details.transitionQualifiers.includes('forward_back')) {
+        console.log(`Ignoring history navigation on ${newTabId}`);
+        return;
+    }
+
     if (recyclingMap.has(newTabId)) {
         const candidateIds = recyclingMap.get(newTabId);
 
