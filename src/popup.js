@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const customDurationContainer = document.getElementById('custom-duration-container');
     const customDurationInput = document.getElementById('custom-duration');
     const statusText = document.getElementById('status-text');
-    const whitelistContainer = document.getElementById('whitelist-container');
 
     // Load current state
     const data = await chrome.storage.local.get(['recyclingMode', 'ignoreGroupedTabs', 'pauseDuration', 'blocklist', 'minInactiveTime']);
@@ -28,7 +27,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     updateStatus();
-    updateWhitelist(data.blocklist || []);
 
     // Listen for changes
 
@@ -105,36 +103,172 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
     }
 
-    function updateWhitelist(blocklist) {
-        whitelistContainer.innerHTML = '';
+    // Screen Navigation
+    const screens = {
+        main: document.getElementById('main-screen'),
+        history: document.getElementById('history-screen'),
+        whitelist: document.getElementById('whitelist-screen')
+    };
+
+    const navItems = document.querySelectorAll('.nav-item');
+    const backFromHistory = document.getElementById('back-from-history');
+    const backFromWhitelist = document.getElementById('back-from-whitelist');
+
+    function switchScreen(screenName) {
+        // Hide all screens
+        Object.values(screens).forEach(screen => screen.classList.remove('active'));
+
+        // Show selected screen
+        screens[screenName].classList.add('active');
+
+        // Update nav items
+        navItems.forEach(item => {
+            if (item.dataset.screen === screenName) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+
+        // Load data for specific screens
+        if (screenName === 'history') {
+            loadHistory();
+        } else if (screenName === 'whitelist') {
+            loadWhitelist();
+        }
+    }
+
+    // Navigation event listeners
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            switchScreen(item.dataset.screen);
+        });
+    });
+
+    backFromHistory.addEventListener('click', () => {
+        switchScreen('main');
+    });
+
+    backFromWhitelist.addEventListener('click', () => {
+        switchScreen('main');
+    });
+
+    // History Screen Functions
+    async function loadHistory() {
+        const data = await chrome.storage.local.get('recyclingHistory');
+        const history = data.recyclingHistory || [];
+        const list = document.getElementById('history-list');
+        list.innerHTML = '';
+
+        if (history.length === 0) {
+            list.innerHTML = '<div class="empty-state">No recycling history yet.</div>';
+            return;
+        }
+
+        history.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+
+            // Time formatting
+            const date = new Date(item.timestamp);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            let timeStr;
+            if (days > 0) {
+                timeStr = `${days}d ago`;
+            } else if (hours > 0) {
+                timeStr = `${hours}h ago`;
+            } else if (minutes > 0) {
+                timeStr = `${minutes}m ago`;
+            } else {
+                timeStr = 'Just now';
+            }
+
+            div.innerHTML = `
+                <img class="history-favicon" src="${item.favIconUrl || 'icons/default.png'}" alt="Favicon">
+                <div class="history-details">
+                    <div class="history-title" title="${item.title}">${item.title}</div>
+                    <div class="history-url" title="${item.url}">${item.url}</div>
+                </div>
+                <div class="history-time">${timeStr}</div>
+            `;
+
+            div.addEventListener('click', () => {
+                chrome.tabs.create({ url: item.url });
+            });
+
+            list.appendChild(div);
+        });
+    }
+
+    // Whitelist Screen Functions
+    async function loadWhitelist() {
+        const data = await chrome.storage.local.get('blocklist');
+        const blocklist = data.blocklist || [];
+        const list = document.getElementById('whitelist-list');
+        list.innerHTML = '';
 
         if (blocklist.length === 0) {
-            whitelistContainer.innerHTML = '<div style="font-size: 12px; color: #5f6368; padding: 8px;">No sites whitelisted</div>';
+            list.innerHTML = '<div class="empty-state">No sites whitelisted.</div>';
             return;
         }
 
         blocklist.forEach(site => {
             const item = document.createElement('div');
-            item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; font-size: 13px; border-bottom: 1px solid #f1f3f4;';
+            item.className = 'whitelist-item';
 
             const siteName = document.createElement('span');
+            siteName.className = 'whitelist-site';
             siteName.textContent = site;
-            siteName.style.cssText = 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
 
             const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-button';
             removeBtn.textContent = '×';
-            removeBtn.style.cssText = 'background: none; border: none; color: #d93025; font-size: 18px; cursor: pointer; padding: 0 4px;';
             removeBtn.title = 'Remove from whitelist';
 
             removeBtn.addEventListener('click', async () => {
                 const newBlocklist = blocklist.filter(s => s !== site);
                 await chrome.storage.local.set({ blocklist: newBlocklist });
-                updateWhitelist(newBlocklist);
+                loadWhitelist();
             });
 
             item.appendChild(siteName);
             item.appendChild(removeBtn);
-            whitelistContainer.appendChild(item);
+            list.appendChild(item);
         });
     }
+
+    // Add whitelist functionality
+    const whitelistInput = document.getElementById('whitelist-input');
+    const addWhitelistBtn = document.getElementById('add-whitelist-btn');
+
+    async function addToWhitelist() {
+        const input = whitelistInput.value.trim();
+        if (!input) return;
+
+        // Clean up the input (remove protocol, www, trailing slash)
+        let hostname = input.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+
+        const data = await chrome.storage.local.get('blocklist');
+        const blocklist = data.blocklist || [];
+
+        if (!blocklist.includes(hostname)) {
+            blocklist.push(hostname);
+            await chrome.storage.local.set({ blocklist });
+            loadWhitelist();
+        }
+
+        whitelistInput.value = '';
+    }
+
+    addWhitelistBtn.addEventListener('click', addToWhitelist);
+    whitelistInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            addToWhitelist();
+        }
+    });
 });

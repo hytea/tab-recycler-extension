@@ -6,9 +6,20 @@
     <style>
         body {
             width: 300px;
-            padding: 15px;
+            padding: 0;
+            margin: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #202124;
+        }
+
+        .screen {
+            display: none;
+            padding: 15px;
+            min-height: 400px;
+        }
+
+        .screen.active {
+            display: block;
         }
 
         .header {
@@ -18,6 +29,24 @@
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            color: #5f6368;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .back-button:hover {
+            color: #202124;
         }
 
         .option {
@@ -85,77 +114,295 @@
             border-top: 1px solid #eee;
             padding-top: 10px;
         }
+
+        /* Navigation Bar */
+        .nav-bar {
+            display: flex;
+            border-top: 1px solid #eee;
+            background: #fff;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #5f6368;
+            transition: background 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-item:hover {
+            background: #f8f9fa;
+        }
+
+        .nav-item.active {
+            color: #1a73e8;
+            font-weight: 500;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-icon img {
+            width: 20px;
+            height: 20px;
+            opacity: 0.6;
+        }
+
+        .nav-item.active .nav-icon img {
+            opacity: 1;
+            filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1352%) hue-rotate(198deg) brightness(99%) contrast(91%);
+        }
+
+        /* History Screen */
+        .history-list {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #f1f3f4;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: #f8f9fa;
+        }
+
+        .history-favicon {
+            width: 16px;
+            height: 16px;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .history-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-title {
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .history-url {
+            font-size: 11px;
+            color: #5f6368;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: #5f6368;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #5f6368;
+            font-size: 14px;
+        }
+
+        /* Whitelist Screen */
+        .whitelist-input-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .whitelist-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #dfe1e5;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .add-button {
+            padding: 8px 16px;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .add-button:hover {
+            background: #1557b0;
+        }
+
+        .whitelist-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .whitelist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            font-size: 13px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .whitelist-site {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .remove-button {
+            background: none;
+            border: none;
+            color: #d93025;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .remove-button:hover {
+            color: #a50e0e;
+        }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <img src="icons/icon-16.png" style="width:16px;height:16px;">
-        Tab Recycler
-    </div>
-
-    <div class="option">
-        <span class="label">Cleanup Mode (3x)</span>
-        <label class="switch">
-            <input type="checkbox" id="cleanup-mode">
-            <span class="slider"></span>
-        </label>
-    </div>
-
-    <div class="option">
-        <span class="label">Ignore Grouped Tabs</span>
-        <label class="switch">
-            <input type="checkbox" id="ignore-grouped-tabs">
-            <span class="slider"></span>
-        </label>
-    </div>
-
-    <div class="option">
-        <span class="label">Inactivity Threshold</span>
-        <select id="inactivity-threshold" style="padding: 4px; border-radius: 4px; border: 1px solid #dfe1e5;">
-            <option value="10000">10 sec</option>
-            <option value="30000">30 sec</option>
-            <option value="300000">5 min</option>
-            <option value="1800000">30 min</option>
-            <option value="3600000" selected>1 hr</option>
-            <option value="7200000">2 hr</option>
-            <option value="14400000">4 hr</option>
-            <option value="43200000">12 hr</option>
-            <option value="86400000">24 hr</option>
-            <option value="172800000">48 hr</option>
-        </select>
-    </div>
-
-
-    <div class="option">
-        <span class="label">Pause Duration (hours)</span>
-        <select id="pause-duration" style="padding: 4px; border-radius: 4px; border: 1px solid #dfe1e5;">
-            <option value="1">1 hour</option>
-            <option value="2">2 hours</option>
-            <option value="4" selected>4 hours</option>
-            <option value="8">8 hours</option>
-            <option value="24">24 hours</option>
-            <option value="custom">Custom...</option>
-        </select>
-    </div>
-
-    <div class="option" id="custom-duration-container" style="display: none;">
-        <span class="label">Custom Hours</span>
-        <input type="number" id="custom-duration" min="1" max="168" value="4"
-            style="padding: 4px; border-radius: 4px; border: 1px solid #dfe1e5; width: 60px;">
-    </div>
-
-    <div style="border-top: 1px solid #eee; margin-top: 15px; padding-top: 15px;">
-        <div style="font-weight: 500; font-size: 14px; margin-bottom: 10px;">
-            Whitelisted Sites
+    <!-- Main Screen -->
+    <div id="main-screen" class="screen active">
+        <div class="header">
+            <img src="icons/icon-16.png" style="width:16px;height:16px;">
+            Tab Recycler
         </div>
-        <div id="whitelist-container" style="max-height: 150px; overflow-y: auto;">
+
+        <div class="option">
+            <span class="label">Cleanup Mode (3x)</span>
+            <label class="switch">
+                <input type="checkbox" id="cleanup-mode">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="option">
+            <span class="label">Ignore Grouped Tabs</span>
+            <label class="switch">
+                <input type="checkbox" id="ignore-grouped-tabs">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="option">
+            <span class="label">Inactivity Threshold</span>
+            <select id="inactivity-threshold" style="padding: 4px; border-radius: 4px; border: 1px solid #dfe1e5;">
+                <option value="10000">10 sec</option>
+                <option value="30000">30 sec</option>
+                <option value="300000">5 min</option>
+                <option value="1800000">30 min</option>
+                <option value="3600000" selected>1 hr</option>
+                <option value="7200000">2 hr</option>
+                <option value="14400000">4 hr</option>
+                <option value="43200000">12 hr</option>
+                <option value="86400000">24 hr</option>
+                <option value="172800000">48 hr</option>
+            </select>
+        </div>
+
+        <div class="option">
+            <span class="label">Pause Duration (hours)</span>
+            <select id="pause-duration" style="padding: 4px; border-radius: 4px; border: 1px solid #dfe1e5;">
+                <option value="1">1 hour</option>
+                <option value="2">2 hours</option>
+                <option value="4" selected>4 hours</option>
+                <option value="8">8 hours</option>
+                <option value="24">24 hours</option>
+                <option value="custom">Custom...</option>
+            </select>
+        </div>
+
+        <div class="option" id="custom-duration-container" style="display: none;">
+            <span class="label">Custom Hours</span>
+            <input type="number" id="custom-duration" min="1" max="168" value="4"
+                style="padding: 4px; border-radius: 4px; border: 1px solid #dfe1e5; width: 60px;">
+        </div>
+
+        <div class="status" id="status-text">
+            Production settings active.
+        </div>
+    </div>
+
+    <!-- History Screen -->
+    <div id="history-screen" class="screen">
+        <div class="header">
+            <button class="back-button" id="back-from-history">←</button>
+            Recycling History
+        </div>
+        <div class="history-list" id="history-list">
             <!-- Populated by JS -->
         </div>
     </div>
 
-    <div class="status" id="status-text">
-        Production settings active.
+    <!-- Whitelist Screen -->
+    <div id="whitelist-screen" class="screen">
+        <div class="header">
+            <button class="back-button" id="back-from-whitelist">←</button>
+            Whitelisted Sites
+        </div>
+        <div class="whitelist-input-container">
+            <input type="text" id="whitelist-input" class="whitelist-input" placeholder="example.com">
+            <button id="add-whitelist-btn" class="add-button">Add</button>
+        </div>
+        <div class="whitelist-list" id="whitelist-list">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+        <button class="nav-item active" data-screen="main">
+            <div class="nav-icon">
+                <img src="icons/settings.svg" alt="Settings">
+            </div>
+            <div>Settings</div>
+        </button>
+        <button class="nav-item" data-screen="history">
+            <div class="nav-icon">
+                <img src="icons/history.svg" alt="History">
+            </div>
+            <div>History</div>
+        </button>
+        <button class="nav-item" data-screen="whitelist">
+            <div class="nav-icon">
+                <img src="icons/list.svg" alt="Whitelist">
+            </div>
+            <div>Whitelist</div>
+        </button>
     </div>
 
     <script src="popup.js"></script>
