@@ -329,16 +329,42 @@ window.onclick = (event) => {
 };
 
 // News Feed Functionality
+function renderSkeletonCards(count = 6) {
+    const newsContainer = document.getElementById('news-items');
+    newsContainer.innerHTML = '';
+
+    for (let i = 0; i < count; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'news-item skeleton-card';
+        skeleton.innerHTML = `
+            <div class="skeleton news-item-image"></div>
+            <div class="news-item-header">
+                <div class="skeleton skeleton-text short" style="width: 60px;"></div>
+                <div class="skeleton skeleton-text short" style="width: 50px;"></div>
+            </div>
+            <div class="news-item-content">
+                <div class="skeleton skeleton-text" style="width: 100%;"></div>
+                <div class="skeleton skeleton-text" style="width: 80%;"></div>
+                <div class="skeleton skeleton-text short" style="width: 40%; margin-top: 8px;"></div>
+            </div>
+        `;
+        newsContainer.appendChild(skeleton);
+    }
+}
+
 async function loadNewsFeed() {
     const newsContainer = document.getElementById('news-items');
+
+    // Show skeleton loading
+    renderSkeletonCards(6);
 
     try {
         // Using the free tier of Hacker News API as a reliable, CORS-friendly source
         const response = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json');
         const storyIds = await response.json();
 
-        // Get the top 5 stories
-        const topStoryIds = storyIds.slice(0, 5);
+        // Get the top 6 stories
+        const topStoryIds = storyIds.slice(0, 6);
         const stories = await Promise.all(
             topStoryIds.map(id =>
                 fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
@@ -350,7 +376,7 @@ async function loadNewsFeed() {
         newsContainer.innerHTML = '';
 
         // Render news items
-        stories.forEach(story => {
+        stories.forEach((story, index) => {
             if (!story) return;
 
             const newsItem = document.createElement('a');
@@ -362,11 +388,31 @@ async function loadNewsFeed() {
             // Calculate time ago
             const timeAgo = getTimeAgo(story.time * 1000);
 
+            // Generate a gradient placeholder image
+            const gradients = [
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
+            ];
+            const gradient = gradients[index % gradients.length];
+
             newsItem.innerHTML = `
-                <div class="news-item-source">HN</div>
+                <div class="news-item-image" style="background: ${gradient}; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; font-weight: bold; opacity: 0.8;">
+                    ${index + 1}
+                </div>
+                <div class="news-item-header">
+                    <div class="news-item-source">HN</div>
+                    <div class="news-item-time">${timeAgo}</div>
+                </div>
                 <div class="news-item-content">
                     <h3 class="news-item-title">${escapeHtml(story.title)}</h3>
-                    <div class="news-item-time">${timeAgo} • ${story.score || 0} points</div>
+                    <div class="news-item-meta">
+                        <div class="news-item-score">▲ ${story.score || 0} points</div>
+                        ${story.descendants ? `<div>💬 ${story.descendants} comments</div>` : ''}
+                    </div>
                 </div>
             `;
 
