@@ -383,6 +383,24 @@
         </div>
     </div>
 
+    <!-- Priority Sites Screen -->
+    <div id="priority-screen" class="screen">
+        <div class="header">
+            <button class="back-button" id="back-from-priority">←</button>
+            Priority Sites
+        </div>
+        <p style="font-size: 13px; color: #5f6368; margin: 0 0 15px 0; line-height: 1.4;">
+            Sites added here will be recycled first when they meet the inactivity threshold.
+        </p>
+        <div class="whitelist-input-container">
+            <input type="text" id="priority-input" class="whitelist-input" placeholder="example.com">
+            <button id="add-priority-btn" class="add-button">Add</button>
+        </div>
+        <div class="whitelist-list" id="priority-list">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
     <!-- Navigation Bar -->
     <div class="nav-bar">
         <button class="nav-item active" data-screen="main">
@@ -402,6 +420,10 @@
                 <img src="icons/list.svg" alt="Whitelist">
             </div>
             <div>Whitelist</div>
+        </button>
+        <button class="nav-item" data-screen="priority">
+            <div class="nav-icon" style="font-size: 20px; line-height: 20px;">⭐</div>
+            <div>Priority</div>
         </button>
     </div>
 

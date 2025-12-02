@@ -48,6 +48,7 @@ async function checkRecyclingCandidates() {
         const storageData = await chrome.storage.local.get(null);
         const blocklist = storageData.blocklist || [];
         const pausedTabs = storageData.pausedTabs || {};
+        const prioritySites = storageData.prioritySites || [];
 
         const ignoreGroupedTabs = storageData.ignoreGroupedTabs || false;
 
@@ -77,7 +78,27 @@ async function checkRecyclingCandidates() {
             } catch (e) { return false; }
 
             return true;
-        }).sort((a, b) => b.index - a.index);
+        }).sort((a, b) => {
+            // Check if tabs are in priority list
+            let aHostname = '';
+            let bHostname = '';
+            try {
+                aHostname = new URL(a.url).hostname;
+                bHostname = new URL(b.url).hostname;
+            } catch (e) {
+                // If URL parsing fails, treat as non-priority
+            }
+
+            const aIsPriority = prioritySites.includes(aHostname);
+            const bIsPriority = prioritySites.includes(bHostname);
+
+            // Priority sites come first
+            if (aIsPriority && !bIsPriority) return -1;
+            if (!aIsPriority && bIsPriority) return 1;
+
+            // Within same priority level, sort by index (rightmost first)
+            return b.index - a.index;
+        });
 
         if (candidates.length > 0) {
             showCandidate(0);
@@ -182,9 +203,13 @@ function showProposal(tabs) {
                 <div class="card-header">
                     <img class="card-favicon" src="${faviconUrl}" alt="Favicon">
                     <div class="card-title" title="${tab.title}">${tab.title}</div>
+                    <button class="card-menu-btn" title="More options">⋮</button>
                 </div>
                 <div class="card-url" title="${tab.url}">${tab.url}</div>
                 <div class="card-time">${timeText}</div>
+            </div>
+            <div class="card-menu-dropdown hidden">
+                <button class="card-menu-option" data-action="add-priority">Add to Priority List</button>
             </div>
         `;
 
@@ -249,6 +274,57 @@ function showProposal(tabs) {
                         headerSpan.textContent = `♻️ Ready to Recycle`;
                     }
                 }
+            }
+        };
+
+        // Kebab menu functionality
+        const menuBtn = card.querySelector('.card-menu-btn');
+        const menuDropdown = card.querySelector('.card-menu-dropdown');
+
+        menuBtn.onclick = (e) => {
+            e.stopPropagation();
+            // Close any other open menus
+            document.querySelectorAll('.card-menu-dropdown').forEach(menu => {
+                if (menu !== menuDropdown) {
+                    menu.classList.add('hidden');
+                }
+            });
+            // Toggle this menu
+            menuDropdown.classList.toggle('hidden');
+        };
+
+        // Handle menu option clicks
+        const menuOption = card.querySelector('.card-menu-option[data-action="add-priority"]');
+        menuOption.onclick = async (e) => {
+            e.stopPropagation();
+            try {
+                const url = new URL(tab.url);
+                const hostname = url.hostname;
+
+                // Add to priority sites
+                const data = await chrome.storage.local.get('prioritySites');
+                const prioritySites = data.prioritySites || [];
+
+                if (!prioritySites.includes(hostname)) {
+                    prioritySites.push(hostname);
+                    await chrome.storage.local.set({ prioritySites });
+
+                    // Show feedback (optional)
+                    menuOption.textContent = '✓ Added to Priority List';
+                    setTimeout(() => {
+                        menuDropdown.classList.add('hidden');
+                        menuOption.textContent = 'Add to Priority List';
+                    }, 1000);
+                } else {
+                    // Already in priority list
+                    menuOption.textContent = '✓ Already in Priority List';
+                    setTimeout(() => {
+                        menuDropdown.classList.add('hidden');
+                        menuOption.textContent = 'Add to Priority List';
+                    }, 1000);
+                }
+            } catch (err) {
+                console.error('Error adding to priority list:', err);
             }
         };
 
@@ -394,5 +470,14 @@ window.onclick = (event) => {
         modal.classList.add('hidden');
     }
 };
+
+// Close kebab menus when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.card-menu-btn') && !e.target.closest('.card-menu-dropdown')) {
+        document.querySelectorAll('.card-menu-dropdown').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    }
+});
 
 init();

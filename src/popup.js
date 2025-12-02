@@ -107,12 +107,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const screens = {
         main: document.getElementById('main-screen'),
         history: document.getElementById('history-screen'),
-        whitelist: document.getElementById('whitelist-screen')
+        whitelist: document.getElementById('whitelist-screen'),
+        priority: document.getElementById('priority-screen')
     };
 
     const navItems = document.querySelectorAll('.nav-item');
     const backFromHistory = document.getElementById('back-from-history');
     const backFromWhitelist = document.getElementById('back-from-whitelist');
+    const backFromPriority = document.getElementById('back-from-priority');
 
     function switchScreen(screenName) {
         // Hide all screens
@@ -135,6 +137,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadHistory();
         } else if (screenName === 'whitelist') {
             loadWhitelist();
+        } else if (screenName === 'priority') {
+            loadPriority();
         }
     }
 
@@ -150,6 +154,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     backFromWhitelist.addEventListener('click', () => {
+        switchScreen('main');
+    });
+
+    backFromPriority.addEventListener('click', () => {
         switchScreen('main');
     });
 
@@ -269,6 +277,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     whitelistInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             addToWhitelist();
+        }
+    });
+
+    // Priority Sites Screen Functions
+    async function loadPriority() {
+        const data = await chrome.storage.local.get('prioritySites');
+        const prioritySites = data.prioritySites || [];
+        const list = document.getElementById('priority-list');
+        list.innerHTML = '';
+
+        if (prioritySites.length === 0) {
+            list.innerHTML = '<div class="empty-state">No priority sites added.</div>';
+            return;
+        }
+
+        prioritySites.forEach(site => {
+            const item = document.createElement('div');
+            item.className = 'whitelist-item';
+
+            const siteName = document.createElement('span');
+            siteName.className = 'whitelist-site';
+            siteName.textContent = site;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-button';
+            removeBtn.textContent = '×';
+            removeBtn.title = 'Remove from priority list';
+
+            removeBtn.addEventListener('click', async () => {
+                const newPrioritySites = prioritySites.filter(s => s !== site);
+                await chrome.storage.local.set({ prioritySites: newPrioritySites });
+                loadPriority();
+            });
+
+            item.appendChild(siteName);
+            item.appendChild(removeBtn);
+            list.appendChild(item);
+        });
+    }
+
+    // Add priority site functionality
+    const priorityInput = document.getElementById('priority-input');
+    const addPriorityBtn = document.getElementById('add-priority-btn');
+
+    async function addToPriority() {
+        const input = priorityInput.value.trim();
+        if (!input) return;
+
+        // Clean up the input (remove protocol, www, trailing slash)
+        let hostname = input.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+
+        const data = await chrome.storage.local.get('prioritySites');
+        const prioritySites = data.prioritySites || [];
+
+        if (!prioritySites.includes(hostname)) {
+            prioritySites.push(hostname);
+            await chrome.storage.local.set({ prioritySites });
+            loadPriority();
+        }
+
+        priorityInput.value = '';
+    }
+
+    addPriorityBtn.addEventListener('click', addToPriority);
+    priorityInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            addToPriority();
         }
     });
 });
