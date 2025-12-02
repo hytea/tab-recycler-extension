@@ -23,7 +23,7 @@ body {
     text-align: center;
     width: 100%;
     max-width: 800px;
-    min-height: calc(100vh - 30px);
+    min-height: calc(100vh - 80px);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -676,8 +676,8 @@ body {
 /* News Feed Teaser */
 .news-feed-teaser {
     width: 100%;
-    background: linear-gradient(to bottom, rgba(241, 243, 244, 0), #ffffff 15%);
-    padding: 8px 20px 40px;
+    background: linear-gradient(to bottom, rgba(241, 243, 244, 0) 0%, #ffffff 20%);
+    padding: 20px 20px 40px;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
@@ -818,7 +818,7 @@ body {
 /* Dark mode for news feed */
 @media (prefers-color-scheme: dark) {
     .news-feed-teaser {
-        background: linear-gradient(to bottom, rgba(32, 33, 36, 0), #303134 15%);
+        background: linear-gradient(to bottom, rgba(32, 33, 36, 0) 0%, #303134 20%);
         border-top-color: rgba(255, 255, 255, 0.05);
     }
 
