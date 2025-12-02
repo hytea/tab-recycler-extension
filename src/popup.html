@@ -148,7 +148,22 @@
         }
 
         .nav-icon {
-            font-size: 18px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-icon img {
+            width: 20px;
+            height: 20px;
+            opacity: 0.6;
+        }
+
+        .nav-item.active .nav-icon img {
+            opacity: 1;
+            filter: brightness(0) saturate(100%) invert(42%) sepia(93%) saturate(1352%) hue-rotate(198deg) brightness(99%) contrast(91%);
         }
 
         /* History Screen */
@@ -371,15 +386,21 @@
     <!-- Navigation Bar -->
     <div class="nav-bar">
         <button class="nav-item active" data-screen="main">
-            <div class="nav-icon">⚙️</div>
+            <div class="nav-icon">
+                <img src="icons/settings.svg" alt="Settings">
+            </div>
             <div>Settings</div>
         </button>
         <button class="nav-item" data-screen="history">
-            <div class="nav-icon">🕒</div>
+            <div class="nav-icon">
+                <img src="icons/history.svg" alt="History">
+            </div>
             <div>History</div>
         </button>
         <button class="nav-item" data-screen="whitelist">
-            <div class="nav-icon">📋</div>
+            <div class="nav-icon">
+                <img src="icons/list.svg" alt="Whitelist">
+            </div>
             <div>Whitelist</div>
         </button>
     </div>
